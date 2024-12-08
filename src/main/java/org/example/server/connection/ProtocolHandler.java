@@ -1,11 +1,10 @@
 package org.example.server.connection;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import org.example.utils.Message;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ProtocolHandler implements Runnable {
     private final Socket socket;
@@ -19,63 +18,32 @@ public class ProtocolHandler implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            String message = in.readLine();
-            JsonObject request = gson.fromJson(message, JsonObject.class);
-            String command = request.get("command").getAsString();
-            Integer port = request.get("port").getAsInt();
+            String jsonMessage;
+            while((jsonMessage = in.readLine()) != null) {
+                Message message = gson.fromJson(jsonMessage, Message.class);
 
-            if ("!connect".equals(command)) {
-                boolean accepted = requestUserApproval(port);
-
-                if (accepted) {
-                    out.println(createResponse("!accepted"));
-                    connectionManager.addConnection(port, socket);
-                } else {
-                    out.println(createResponse("!rejected"));
+                if (message.getCommand().equals("!connect")) {
+                    connectionManager.addRequest(message.getPort(), socket);
+                    System.out.println("You received a request from user: " + message.getPort() + "! Type !requests to see available requests.");
+                } else if (message.getCommand().equals("!acc")) {
+                    connectionManager.addConnection(message.getPort(), socket);
+                    System.out.println("User " + message.getPort() + " accepted your request");
+                } else if (message.getCommand().equals("!dec")) {
+                    System.out.println("User " + message.getPort() + " declined your request");
                     socket.close();
                 }
-            } else if ("!message".equals(command)) {
-                if (connectionManager.doesConnectionExist(port))
-                    handleClientCommunication(request);
-            } else if ("!bye".equals(command)) {
-                if (connectionManager.doesConnectionExist(port))
-                    handleClientDisconnected(port);
+                else if(message.getCommand().equals("!bye")){
+                    System.out.println("User " + message.getPort() + " disconnected");
+                    connectionManager.removeConnection(message.getPort());
+                }
+                else if(message.getCommand().equals("!message")){
+                    System.out.println("User " + message.getPort() + ": " + message.getMessage());
+                }
             }
 
-        } catch (IOException e) {
-            System.out.println("Connection lost: " + socket.getRemoteSocketAddress());
-        }
-    }
-
-    private boolean requestUserApproval(Integer port) {
-        System.out.println("Connection request from: " + port + ". Accept? (yes/no)");
-        Scanner scanner = new Scanner(System.in);
-        String response = scanner.nextLine();
-        return response.equalsIgnoreCase("yes");
-    }
-
-    private void handleClientCommunication(JsonObject request) {
-        Integer port = request.get("port").getAsInt();
-        String message = request.get("message").getAsString();
-        System.out.println("Received a message from " + port + ": '" + message + "'");
-    }
-
-    private void handleClientDisconnected(Integer port) {
-        System.out.println("Client " + port + " disconnected!");
-        connectionManager.removeConnection(port);
-        try {
-            socket.close();
-        } catch (IOException e) {
-            System.out.println("Error closing socket: " + e.getMessage());
-        }
-    }
-
-    private String createResponse(String command) {
-        JsonObject response = new JsonObject();
-        response.addProperty("command", command);
-        return gson.toJson(response);
+        } catch (Exception ignored) {}
     }
 }
