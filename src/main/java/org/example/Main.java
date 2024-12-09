@@ -15,7 +15,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
 
-        if (input.length() > 5 || input.length() <= 0) {
+        if (input.length() > 5 || input.isEmpty()) {
             System.out.println("Invalid port! Shutting down...");
             return;
         }

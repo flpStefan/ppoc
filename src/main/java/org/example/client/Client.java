@@ -88,6 +88,7 @@ public class Client {
 
         try {
             Socket socket = new Socket(host, port);
+//            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
             threadPool.submit(new ProtocolHandler(socket, connectionManager));
@@ -95,6 +96,10 @@ public class Client {
             Message message = new Message(command, userPort);
             out.println(gson.toJson(message));
             System.out.println("Request sent!");
+
+//            String reply = in.readLine();
+//            Message rep = gson.fromJson(reply, Message.class);
+//            System.out.println(rep);
         }
         catch (IOException exception) {
             System.out.println("Error in sending request to user: " + port);
@@ -250,6 +255,7 @@ public class Client {
         System.out.println("-> !message PORT MESSAGE");
         System.out.println("-> !bye PORT");
         System.out.println("-> !requests");
+        System.out.println("-> !peers");
         System.out.println("-> !byebye");
     }
 
