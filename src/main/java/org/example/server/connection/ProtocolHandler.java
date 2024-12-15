@@ -25,21 +25,21 @@ public class ProtocolHandler implements Runnable {
             while((jsonMessage = in.readLine()) != null) {
                 Message message = gson.fromJson(jsonMessage, Message.class);
 
-                if (message.getCommand().equals("!connect")) {
+                if ("!connect".equals(message.getCommand())) { //String equals to message.getCommand() ca sa eviti nullpointer excepiton
                     connectionManager.addRequest(message.getPort(), socket);
                     System.out.println("You received a request from user: " + message.getPort() + "! Type !requests to see available requests.");
-                } else if (message.getCommand().equals("!acc")) {
+                } else if ("!acc".equals(message.getCommand())) {
                     connectionManager.addConnection(message.getPort(), socket);
                     System.out.println("User " + message.getPort() + " accepted your request");
-                } else if (message.getCommand().equals("!dec")) {
+                } else if ("!dec".equals(message.getCommand())) {
                     System.out.println("User " + message.getPort() + " declined your request");
                     socket.close();
                 }
-                else if(message.getCommand().equals("!bye")){
+                else if("!bye".equals(message.getCommand())){
                     System.out.println("User " + message.getPort() + " disconnected");
                     connectionManager.removeConnection(message.getPort());
                 }
-                else if(message.getCommand().equals("!message")){
+                else if("!message".equals(message.getCommand())){
                     System.out.println("User " + message.getPort() + ": " + message.getMessage());
                 }
             }

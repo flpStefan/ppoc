@@ -56,7 +56,7 @@ public class Client {
                 case "!requests":
                     showRequests();
                     break;
-                case "!peers":
+                case "!connections":
                     showPeers();
                     break;
                 case "!acc":
